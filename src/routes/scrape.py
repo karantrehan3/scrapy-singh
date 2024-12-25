@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from scrapy.crawler import CrawlerProcess
-from src.scraper.spiders.products_spider import ProductsSpider
+from scraper.products_spider import ProductsSpider
 from src.cache import cache
 from src.notifier import Notifier
 
