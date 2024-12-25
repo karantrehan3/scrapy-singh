@@ -77,5 +77,32 @@ class Cache:
             return []
         return list(all_items.values())
 
+    def set(self, key: str, value: Union[str, int, float, bool, dict]) -> None:
+        """
+        Set the value of a key.
+        """
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value, indent=4)
+        self.client.set(key, str(value))
+
+    def get(self, key: str, parse_type: Optional[str] = "json") -> Any:
+        """
+        Get the value of a key.
+        """
+        value = self.client.get(key)
+        if not value:
+            return None
+        value = value.decode("utf-8")
+        if parse_type:
+            if parse_type == "json":
+                return json.loads(value)
+            elif parse_type == "int":
+                return int(value)
+            elif parse_type == "bool":
+                return value.lower() in ("true", "1")
+            elif parse_type == "str":
+                return value
+        return value
+
 
 cache = Cache(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
