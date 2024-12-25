@@ -6,7 +6,7 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 
 ## Tech Stack
 
-- **FastAPI**: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
+- **FastAPI**: A modern, fast (high-performance), web framework for building APIs.
 - **Scrapy**: An open-source and collaborative web crawling framework for Python.
 - **Redis**: An in-memory data structure store, used as a database, cache, and message broker.
 - **Docker**: A set of platform-as-a-service products that use OS-level virtualization to deliver software in packages called containers.
@@ -44,8 +44,8 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 
 1. **Clone the repository**:
     ```sh
-    git clone <repository-url>
-    cd <repository-directory>
+    git clone https://github.com/karantrehan3/scrapy-singh.git
+    cd scrapy-singh
     ```
 
 2. **Create a [`.env`](.env ) file**:
@@ -87,7 +87,10 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 3. **Database**:
     - The [`Database`](src/db.py ) class in [`src/db.py`](src/db.py ) saves the scraped data to a JSON file ([`scraped_data.json`](src/routes/scrape.py )).
 
-4. **Routes**:
+4. **Notifier**:
+    - The [`Notifier`](src/notifier.py ) class in [`src/notifier.py`](src/notifier.py ) is responsible for notifying the user by logging the message to console.
+
+5. **Routes**:
     - The [`scrape`](src/routes/scrape.py ) endpoint in [`src/routes/scrape.py`](src/routes/scrape.py ) starts the scraping process and saves the data to the database.
     - The [`auth`](src/routes/auth.py ) module in [`src/routes/auth.py`](src/routes/auth.py ) handles API key authentication.
 

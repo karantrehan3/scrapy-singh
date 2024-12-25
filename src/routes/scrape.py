@@ -18,11 +18,15 @@ def scrape(num_pages: int = 1, proxy: str = None):
     )
     process.start()
 
-    # Fetch cached data and write to JSON if updated
+    # Fetch cached data if available else return empty list in the API response
     cached_products = cache.get("scraped_products")
     if cached_products:
         scraped_data = json.loads(cached_products)
     else:
         scraped_data = []
 
-    return {"message": f"Scraping complete. {len(scraped_data)} products saved."}
+    return {
+        "ok": True,
+        "message": f"Scraping complete. {len(scraped_data)} products saved.",
+        "scraped_data": scraped_data,
+    }

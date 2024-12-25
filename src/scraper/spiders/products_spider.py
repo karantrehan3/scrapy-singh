@@ -23,12 +23,13 @@ class ProductsSpider(Spider):
             "CONCURRENT_REQUESTS": 4,
             "PROXY": self.proxy,
         }
+        self.cache = cache
         self.database = Database()
         self.retry_attempts = 3
 
     def parse(self, response):
         products = []
-        cached_scraped_products = cache.get("scraped_products")
+        cached_scraped_products = self.cache.get("scraped_products")
         if cached_scraped_products:
             products = json.loads(cached_scraped_products)
 
@@ -42,17 +43,17 @@ class ProductsSpider(Spider):
             }
 
             # Check cache to avoid updating unchanged products
-            cached_data = cache.get(product["product_title"])
+            cached_data = self.cache.get(product["product_title"])
             if cached_data:
                 cached_product = json.loads(cached_data)
                 if cached_product["product_price"] == product["product_price"]:
                     continue
 
-            cache.set(product["product_title"], json.dumps(product, indent=4))
+            self.cache.set(product["product_title"], json.dumps(product, indent=4))
             products.append(product)
 
         # Cache the entire product list for later use
-        cache.set("scraped_products", json.dumps(products, indent=4))
+        self.cache.set("scraped_products", json.dumps(products, indent=4))
         self.database.save(products)
         Notifier.notify(f"Scraping complete. {len(products)} products saved.")
 
