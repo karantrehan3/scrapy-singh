@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  web:
+  tool:
     build: .
     container_name: scraping_tool
     ports:
