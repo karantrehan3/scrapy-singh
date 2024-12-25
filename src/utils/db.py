@@ -1,14 +1,19 @@
 import json
+import os
 from typing import List, Dict, Tuple
 
 
 class Database:
-    def __init__(self, filename="scraped_data.json"):
+    def __init__(self, directory="storage", filename="scraped_data.json"):
         """
-        Initialize the Database with the given filename.
+        Initialize the Database with the given directory and filename.
         """
 
-        self.filename = filename
+        self.directory = directory
+        self.filename = os.path.join(directory, filename)
+
+        # Ensure the directory exists
+        os.makedirs(self.directory, exist_ok=True)
 
     def save(self, data: List[Dict], key: str) -> Tuple[int, int]:
         """
