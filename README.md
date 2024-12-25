@@ -20,17 +20,21 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 │   │   ├── __init__.py
 │   │   ├── auth.py
 │   │   └── scrape.py
-│   ├── srcaper/
-│   │   └── spiders/
-│   │       └── product_spider.py
+│   ├── scraper/
+│   │   └── products_spider.py
 │   ├── app.py
-│   ├── cache.py
-│   ├── config.py
-│   └── db.py
+│   ├── utils/
+│   │   ├── cache.py
+│   │   ├── db.py
+│   │   └── notifier.py
+│   ├── config/
+│   │   └── __init__.py
 ├── .env
+├── .env.example
 ├── docker-compose.yml
 ├── Dockerfile
-└── requirements.txt
+├── requirements.txt
+└── README.md
 ```
 
 ## Getting Started
@@ -43,64 +47,73 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 ### Setup
 
 1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/karantrehan3/scrapy-singh.git
-    cd scrapy-singh
-    ```
 
-2. **Create a [`.env`](.env ) file**:
-    Copy the [`.env.example`](.env.example ) file to [`.env`](.env ) and fill in the required environment variables.
-    ```sh
-    cp .env.example .env
-    ```
+   ```sh
+   git clone https://github.com/karantrehan3/scrapy-singh.git
+   cd scrapy-singh
+   ```
+
+2. **Create a [`.env`](.env) file**:
+   Copy the [`.env.example`](.env.example) file to [`.env`](.env) and fill in the required environment variables.
+
+   ```sh
+   cp .env.example .env
+   ```
 
 3. **Build and start the Docker containers**:
-    ```sh
-    docker-compose up --build
-    ```
+
+   ```sh
+   docker-compose up --build
+   ```
 
 4. **Access the FastAPI server**:
-    The server will be running at `http://localhost:8000`.
+   The server will be running at `http://localhost:8000`.
 
 ### API Endpoints
 
 - **Health Check**: `GET /health`
-    - Returns a simple message indicating the server is running.
 
-- **Scrape Products**: `GET /scrape`
-    - Parameters:
-        - [`num_pages`](src/scraper/spiders/products_spider.py ) (optional): Number of pages to scrape. Default is 1.
-        - [`proxy`](src/scraper/spiders/products_spider.py ) (optional): Proxy to use for scraping.
-    - Starts the scraping process and saves the scraped data to a JSON file.
+  - Returns a simple message indicating the server is running.
+
+- **Scrape Products**: `POST /scrape`
+  - Query Parameters:
+    - `num_pages` (optional): Number of pages to scrape. Default is 1.
+    - `retry_attempts` (optional): Number of retry attempts for failed requests. Default is 3.
+    - `proxy` (optional): Proxy to use for scraping.
+  - Starts the scraping process and saves the scraped data to a JSON file.
 
 ## How Scraping Works
 
 1. **Scraping Process**:
-    - The [`ProductsSpider`](src/scraper/spiders/products_spider.py ) class in [`src/scraper/spiders/products_spider.py`](src/scraper/spiders/products_spider.py ) is responsible for scraping product data.
-    - It takes [`base_url`](src/scraper/spiders/products_spider.py ), [`num_pages`](src/scraper/spiders/products_spider.py ), and [`proxy`](src/scraper/spiders/products_spider.py ) as parameters.
-    - It fetches product details such as title, price, and image path from the specified pages.
+
+   - The [`ProductsSpider`](src/scraper/products_spider.py) class in [`src/scraper/products_spider.py`](src/scraper/products_spider.py) is responsible for scraping product data.
+   - It takes `base_url`, `num_pages`, `retry_attempts`, and `proxy` as parameters.
+   - It fetches product details such as title, price, and image path from the specified pages.
 
 2. **Caching**:
-    - The [`Cache`](src/cache.py ) class in [`src/cache.py`](src/cache.py ) uses Redis to cache scraped data.
-    - It checks the cache to avoid updating unchanged products and caches the entire product list for later use.
+
+   - The [`Cache`](src/utils/cache.py) class in [`src/utils/cache.py`](src/utils/cache.py) uses Redis to cache scraped data.
+   - It checks the cache to avoid updating unchanged products and caches the entire product list for later use.
 
 3. **Database**:
-    - The [`Database`](src/db.py ) class in [`src/db.py`](src/db.py ) saves the scraped data to a JSON file ([`scraped_data.json`](src/routes/scrape.py )).
+
+   - The [`Database`](src/utils/db.py) class in [`src/utils/db.py`](src/utils/db.py) saves the scraped data to a JSON file.
 
 4. **Notifier**:
-    - The [`Notifier`](src/notifier.py ) class in [`src/notifier.py`](src/notifier.py ) is responsible for notifying the user by logging the message to console.
+
+   - The [`Notifier`](src/utils/notifier.py) class in [`src/utils/notifier.py`](src/utils/notifier.py) is responsible for notifying the user by logging the message to the console.
 
 5. **Routes**:
-    - The [`scrape`](src/routes/scrape.py ) endpoint in [`src/routes/scrape.py`](src/routes/scrape.py ) starts the scraping process and saves the data to the database.
-    - The [`auth`](src/routes/auth.py ) module in [`src/routes/auth.py`](src/routes/auth.py ) handles API key authentication.
+   - The [`scrape`](src/routes/scrape.py) endpoint in [`src/routes/scrape.py`](src/routes/scrape.py) starts the scraping process and saves the data to the database.
+   - The [`auth`](src/routes/auth.py) module in [`src/routes/auth.py`](src/routes/auth.py) handles API key authentication.
 
 ## Configuration
 
 - **Environment Variables**:
-    - [`AUTH_TOKEN`](src/config.py ): Authentication token for API requests.
-    - [`REDIS_HOST`](src/config.py ): Redis server host.
-    - [`REDIS_PORT`](src/config.py ): Redis server port.
-    - [`SERVER_PORT`](src/config.py ): Port on which the FastAPI server runs.
+  - `AUTH_TOKEN`: Authentication token for API requests.
+  - `REDIS_HOST`: Redis server host.
+  - `REDIS_PORT`: Redis server port.
+  - `SERVER_PORT`: Port on which the FastAPI server runs.
 
 ## License
 
