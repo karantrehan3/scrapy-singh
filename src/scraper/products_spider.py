@@ -2,7 +2,6 @@ from scrapy import Spider, Request
 from scrapy.exceptions import CloseSpider
 from scrapy.http import Response
 from typing import List, Dict, Any, Generator
-import json
 import time
 from src.utils.cache import cache
 from src.utils.db import database
@@ -57,8 +56,7 @@ class ProductsSpider(Spider):
             # Check cache to avoid updating unchanged products
             cached_data = self.cache.hget(self.name, product["product_title"])
             if cached_data:
-                cached_product = json.loads(cached_data)
-                if cached_product["product_price"] == product["product_price"]:
+                if cached_data["product_price"] == product["product_price"]:
                     continue
 
             self.cache.hset(self.name, product["product_title"], product)
