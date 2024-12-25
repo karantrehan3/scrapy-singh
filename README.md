@@ -82,6 +82,9 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
     - `proxy` (optional): Proxy to use for scraping.
   - Starts the scraping process and saves the scraped data to a JSON file.
 
+### Note: Multiple requests to POST /scrape in the same runtime do not work.
+I am aware about the one issue where more than one API call won't yield results but will give an error `twisted.internet.error.ReactorNotRestartable`. This is because scrapy starts a reactor when `process.start()` is called and this cannot be restarted. There are solutions for this out there but I have not been able to integrate one in the current scenario yet. Working on resolving this.
+
 ## How Scraping Works
 
 1. **Scraping Process**:
