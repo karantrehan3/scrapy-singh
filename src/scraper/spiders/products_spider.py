@@ -3,14 +3,16 @@ from scrapy.exceptions import CloseSpider
 import json
 import time
 from src.cache import cache
-from src.db import Database
-from src.notifier import Notifier
+from src.db import database
 
 
 class ProductsSpider(Spider):
     name = "products"
 
     def __init__(self, base_url, num_pages, proxy=None, *args, **kwargs):
+        """
+        Initialize the ProductsSpider with the given parameters.
+        """
         super().__init__(*args, **kwargs)
         self.base_url = base_url
         self.num_pages = int(num_pages)
@@ -24,14 +26,14 @@ class ProductsSpider(Spider):
             "PROXY": self.proxy,
         }
         self.cache = cache
-        self.database = Database()
+        self.database = database
         self.retry_attempts = 3
 
     def parse(self, response):
-        products = []
-        cached_scraped_products = self.cache.get("scraped_products")
-        if cached_scraped_products:
-            products = json.loads(cached_scraped_products)
+        """
+        Parse the response from the product page.
+        """
+        products = self.cache.hgetall_values(self.name)
 
         for card in response.xpath("/html/body/div[1]/div[2]/div/div/div/div[4]/ul/li"):
             product = {
@@ -43,21 +45,21 @@ class ProductsSpider(Spider):
             }
 
             # Check cache to avoid updating unchanged products
-            cached_data = self.cache.get(product["product_title"])
+            cached_data = self.cache.hget(self.name, product["product_title"])
             if cached_data:
                 cached_product = json.loads(cached_data)
                 if cached_product["product_price"] == product["product_price"]:
                     continue
 
-            self.cache.set(product["product_title"], json.dumps(product, indent=4))
+            self.cache.hset(self.name, product["product_title"], product)
             products.append(product)
 
-        # Cache the entire product list for later use
-        self.cache.set("scraped_products", json.dumps(products, indent=4))
         self.database.save(products)
-        Notifier.notify(f"Scraping complete. {len(products)} products saved.")
 
     def start_requests(self):
+        """
+        Generate the initial requests for the spider.
+        """
         for url in self.start_urls:
             for attempt in range(self.retry_attempts):
                 try:
@@ -70,4 +72,7 @@ class ProductsSpider(Spider):
                         raise
 
     def errback(self, failure):
+        """
+        Handle errors during requests.
+        """
         self.logger.error(repr(failure))

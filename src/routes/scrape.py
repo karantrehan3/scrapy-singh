@@ -1,14 +1,14 @@
 from fastapi import APIRouter
 from scrapy.crawler import CrawlerProcess
-import json
 from src.scraper.spiders.products_spider import ProductsSpider
 from src.cache import cache
+from src.notifier import Notifier
 
 scrape_router = APIRouter()
 
 
 @scrape_router.get("/scrape")
-def scrape(num_pages: int = 1, proxy: str = None):
+async def scrape(num_pages: int = 1, proxy: str = None):
     process = CrawlerProcess()
     process.crawl(
         ProductsSpider,
@@ -19,14 +19,12 @@ def scrape(num_pages: int = 1, proxy: str = None):
     process.start()
 
     # Fetch cached data if available else return empty list in the API response
-    cached_products = cache.get("scraped_products")
-    if cached_products:
-        scraped_data = json.loads(cached_products)
-    else:
-        scraped_data = []
+    scraped_data = cache.hgetall_values(ProductsSpider.name)
+    message = f"{'Balle Balle! Scraping complete.' if scraped_data else 'Scraping complete, par kuch mila nahi.'} {len(scraped_data)} products saved."
 
+    Notifier.notify(message)
     return {
         "ok": True,
-        "message": f"Scraping complete. {len(scraped_data)} products saved.",
-        "scraped_data": scraped_data,
+        "message": message,
+        "data": scraped_data,
     }
