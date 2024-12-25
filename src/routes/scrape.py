@@ -8,13 +8,14 @@ scrape_router = APIRouter()
 
 
 @scrape_router.get("/scrape")
-async def scrape(num_pages: int = 1, proxy: str = None):
+async def scrape(num_pages: int = 1, retry_attempts: int = 3, proxy: str = None):
     process = CrawlerProcess()
     process.crawl(
         ProductsSpider,
         base_url="https://dentalstall.com/shop/",
         num_pages=num_pages,
         proxy=proxy,
+        retry_attempts=retry_attempts,
     )
     process.start()
 

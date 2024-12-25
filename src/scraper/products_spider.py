@@ -1,15 +1,26 @@
 from scrapy import Spider, Request
 from scrapy.exceptions import CloseSpider
+from scrapy.http import Response
+from typing import List, Dict, Any, Generator
 import json
 import time
 from src.utils.cache import cache
 from src.utils.db import database
+from src.utils.notifier import Notifier
 
 
 class ProductsSpider(Spider):
     name = "products"
 
-    def __init__(self, base_url, num_pages, proxy=None, *args, **kwargs):
+    def __init__(
+        self,
+        base_url: str,
+        num_pages: int,
+        retry_attempts: int,
+        proxy: str = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """
         Initialize the ProductsSpider with the given parameters.
         """
@@ -27,14 +38,13 @@ class ProductsSpider(Spider):
         }
         self.cache = cache
         self.database = database
-        self.retry_attempts = 3
+        self.retry_attempts = retry_attempts
 
-    def parse(self, response):
+    def parse(self, response: Response) -> None:
         """
         Parse the response from the product page.
         """
-        products = self.cache.hgetall_values(self.name)
-
+        products: List[Dict[str, str]] = []
         for card in response.xpath("/html/body/div[1]/div[2]/div/div/div/div[4]/ul/li"):
             product = {
                 "product_title": card.xpath(".//div[1]/a/img/@alt").get(),
@@ -54,9 +64,10 @@ class ProductsSpider(Spider):
             self.cache.hset(self.name, product["product_title"], product)
             products.append(product)
 
-        self.database.save(products)
+        updated_count, inserted_count = self.database.save(products, "product_title")
+        Notifier.notify(f"Updated: {updated_count}, Inserted: {inserted_count}")
 
-    def start_requests(self):
+    def start_requests(self) -> Generator[Any, Any, Any]:
         """
         Generate the initial requests for the spider.
         """
@@ -71,7 +82,7 @@ class ProductsSpider(Spider):
                     else:
                         raise
 
-    def errback(self, failure):
+    def errback(self, failure: Any) -> None:
         """
         Handle errors during requests.
         """
