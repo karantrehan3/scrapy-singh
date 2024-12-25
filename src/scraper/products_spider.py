@@ -1,3 +1,5 @@
+import os
+import requests
 from scrapy import Spider, Request
 from scrapy.exceptions import CloseSpider
 from scrapy.http import Response
@@ -45,12 +47,28 @@ class ProductsSpider(Spider):
         """
         products: List[Dict[str, str]] = []
         for card in response.xpath("/html/body/div[1]/div[2]/div/div/div/div[4]/ul/li"):
+            product_title = card.xpath(".//div[1]/a/img/@alt").get()
+
+            price_element = card.xpath(".//div[2]/div[2]/span[1]")
+            starting_at_price = price_element.xpath(
+                ".//span[contains(@class, 'starting')]/following-sibling::span/bdi/text()"
+            ).get()
+            regular_price = price_element.xpath(".//ins/span/bdi/text()").get()
+            product_price = (
+                f"Starting at: ₹{starting_at_price}"
+                if starting_at_price
+                else f"₹{regular_price}"
+            )
+
+            image_url = card.xpath(".//div[1]/a/img/@data-lazy-src").get()
+
             product = {
-                "product_title": card.xpath(".//div[1]/a/img/@alt").get(),
-                "product_price": card.xpath(
-                    ".//div[2]/div[2]/span[1]/ins/span/bdi/text()"
-                ).get(),
-                "path_to_image": card.xpath(".//div[1]/a/img/@data-lazy-src").get(),
+                "product_title": product_title,
+                "product_price": product_price,
+                "product_image_url": image_url,
+                "path_to_image": (
+                    self.download_image(image_url, product_title) if image_url else None
+                ),
             }
 
             # Check cache to avoid updating unchanged products
@@ -64,6 +82,24 @@ class ProductsSpider(Spider):
 
         updated_count, inserted_count = self.database.save(products, "product_title")
         Notifier.notify(f"Updated: {updated_count}, Inserted: {inserted_count}")
+
+    def download_image(self, url: str, product_title: str) -> str:
+        """
+        Download the image from the given URL and save it to the storage/images directory.
+        Return the absolute path to the saved image.
+        """
+        directory = "storage/images"
+        os.makedirs(directory, exist_ok=True)
+        sanitized_title = product_title.replace(" ", "_")
+        file_path = os.path.join(directory, f"{sanitized_title}.jpg")
+
+        response = requests.get(url)
+        if response.status_code == 200:
+            with open(file_path, "wb") as file:
+                file.write(response.content)
+            return os.path.abspath(file_path)
+        else:
+            return None
 
     def start_requests(self) -> Generator[Any, Any, Any]:
         """

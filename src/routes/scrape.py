@@ -7,7 +7,7 @@ from src.utils.notifier import Notifier
 scrape_router = APIRouter()
 
 
-@scrape_router.get("/scrape")
+@scrape_router.post("/scrape")
 async def scrape(num_pages: int = 1, retry_attempts: int = 3, proxy: str = None):
     process = CrawlerProcess()
     process.crawl(
