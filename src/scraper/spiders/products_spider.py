@@ -1,9 +1,13 @@
-import scrapy
+from scrapy import Spider, Request
+from scrapy.exceptions import CloseSpider
 import json
+import time
 from src.cache import cache
+from src.db import Database
+from src.notifier import Notifier
 
 
-class ProductsSpider(scrapy.Spider):
+class ProductsSpider(Spider):
     name = "products"
 
     def __init__(self, base_url, num_pages, proxy=None, *args, **kwargs):
@@ -19,6 +23,8 @@ class ProductsSpider(scrapy.Spider):
             "CONCURRENT_REQUESTS": 4,
             "PROXY": self.proxy,
         }
+        self.database = Database()
+        self.retry_attempts = 3
 
     def parse(self, response):
         products = []
@@ -47,4 +53,20 @@ class ProductsSpider(scrapy.Spider):
 
         # Cache the entire product list for later use
         cache.set("scraped_products", json.dumps(products, indent=4))
-        return products
+        self.database.save(products)
+        Notifier.notify(f"Scraping complete. {len(products)} products saved.")
+
+    def start_requests(self):
+        for url in self.start_urls:
+            for attempt in range(self.retry_attempts):
+                try:
+                    yield Request(url, callback=self.parse, errback=self.errback)
+                    break
+                except CloseSpider:
+                    if attempt < self.retry_attempts - 1:
+                        time.sleep(2**attempt)
+                    else:
+                        raise
+
+    def errback(self, failure):
+        self.logger.error(repr(failure))

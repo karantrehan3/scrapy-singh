@@ -1,13 +1,11 @@
 from fastapi import APIRouter
-from src.scraper.spiders.products_spider import ProductsSpider
 from scrapy.crawler import CrawlerProcess
-from src.db import Database
-from src.cache import cache
 import json
+from src.scraper.spiders.products_spider import ProductsSpider
+from src.cache import cache
 
 scrape_router = APIRouter()
 
-database = Database()
 
 @scrape_router.get("/scrape")
 def scrape(num_pages: int = 1, proxy: str = None):
@@ -27,5 +25,4 @@ def scrape(num_pages: int = 1, proxy: str = None):
     else:
         scraped_data = []
 
-    database.save(scraped_data)
     return {"message": f"Scraping complete. {len(scraped_data)} products saved."}
