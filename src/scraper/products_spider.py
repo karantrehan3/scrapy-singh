@@ -2,8 +2,8 @@ from scrapy import Spider, Request
 from scrapy.exceptions import CloseSpider
 import json
 import time
-from src.cache import cache
-from src.db import database
+from src.utils.cache import cache
+from src.utils.db import database
 
 
 class ProductsSpider(Spider):
