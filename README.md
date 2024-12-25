@@ -66,8 +66,8 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
    docker-compose up --build
    ```
 
-4. **Access the FastAPI server**:
-   The server will be running at `http://localhost:8000`.
+4. **Access the FastAPI Docs**:
+   The server will be running at port 8000 and docs will be available at `http://localhost:8000/docs`.
 
 ### API Endpoints
 
@@ -75,15 +75,26 @@ This project is a web scraping tool built using FastAPI and Scrapy. It scrapes p
 
   - Returns a simple message indicating the server is running.
 
+  ```sh
+  curl --location 'http://localhost:8000/health'
+  ```
+
 - **Scrape Products**: `POST /scrape`
+
   - Query Parameters:
     - `num_pages` (optional): Number of pages to scrape. Default is 1.
     - `retry_attempts` (optional): Number of retry attempts for failed requests. Default is 3.
     - `proxy` (optional): Proxy to use for scraping.
   - Starts the scraping process and saves the scraped data to a JSON file.
 
+  ```sh
+  curl --location --request POST 'http://localhost:8000/scrape?num_pages=&retry_attempts=&proxy=' \
+  --header 'Authorization: your_static_token'
+  ```
+
 ### Note: Multiple requests to POST /scrape in the same runtime do not work.
-I am aware about the one issue where more than one API call won't yield results but will give an error `twisted.internet.error.ReactorNotRestartable`. This is because scrapy starts a reactor when `process.start()` is called and this cannot be restarted. There are solutions for this out there but I have not been able to integrate one in the current scenario yet. Working on resolving this.
+
+> I am aware about the one issue where more than one API call won't yield results but will give an error `twisted.internet.error.ReactorNotRestartable`. This is because scrapy starts a reactor when `process.start()` is called and this cannot be restarted. There are solutions for this out there but I have not been able to integrate one in the current scenario yet. Working on resolving this.
 
 ## How Scraping Works
 

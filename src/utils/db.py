@@ -1,10 +1,12 @@
 import json
 import os
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 
 
 class Database:
-    def __init__(self, directory="storage", filename="scraped_data.json"):
+    def __init__(
+        self, directory: str = "storage", filename: str = "scraped_data.json"
+    ) -> None:
         """
         Initialize the Database with the given directory and filename.
         """
@@ -15,7 +17,7 @@ class Database:
         # Ensure the directory exists
         os.makedirs(self.directory, exist_ok=True)
 
-    def save(self, data: List[Dict], key: str) -> Tuple[int, int]:
+    def save(self, data: List[Dict[str, Any]], key: str) -> Tuple[int, int]:
         """
         Save the data to a JSON file. If the key exists, update the value; otherwise, insert it.
         Return a tuple with counts of updated and inserted items.
@@ -44,7 +46,7 @@ class Database:
 
         return updated_count, inserted_count
 
-    def load(self) -> List[Dict]:
+    def load(self) -> List[Dict[str, Any]]:
         """
         Load the data from a JSON file.
         """
